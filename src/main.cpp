@@ -9,6 +9,10 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
 
+#define LOGURU_IMPLEMENTATION 1
+#define LOGURU_WITH_STREAMS 1
+#include "external/loguru/loguru.hpp"
+
 using namespace std;
 
 // for convenience
@@ -163,7 +167,7 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 
 }
 
-int main() {
+int main(int argc, char** argv) {
   uWS::Hub h;
 
   // Load up map values for waypoint's x,y,s and d normalized normal vectors
@@ -173,6 +177,7 @@ int main() {
   vector<double> map_waypoints_dx;
   vector<double> map_waypoints_dy;
 
+    loguru::init(argc, argv);
   // Waypoint map to read from
   string map_file_ = "../data/highway_map.csv";
   // The max s value before wrapping around the track back to 0
@@ -276,20 +281,21 @@ int main() {
   });
 
   h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
-    std::cout << "Connected!!!" << std::endl;
+
+      LOG_S(INFO) << "Connected!!!" << std::endl;
   });
 
   h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER> ws, int code,
                          char *message, size_t length) {
     ws.close();
-    std::cout << "Disconnected" << std::endl;
+      LOG_S(INFO) << "Disconnected" << std::endl;
   });
 
   int port = 4567;
   if (h.listen(port)) {
-    std::cout << "Listening to port " << port << std::endl;
+      LOG_S(INFO) << "Listening to port " << port << std::endl;
   } else {
-    std::cerr << "Failed to listen to port" << std::endl;
+      LOG_S(ERROR) << "Failed to listen to port" << std::endl;
     return -1;
   }
   h.run();
