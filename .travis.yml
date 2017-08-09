@@ -16,10 +16,9 @@ before_install:
       - sudo sh -c "(cd $TRAVIS_BUILD_DIR && git clone https://github.com/libuv/libuv.git && cd libuv && git checkout v1.12.0 && sh autogen.sh && ./configure && make -j 4 && make install && cd .. && rm -rf libuv)"
       - sudo sh -c "(cd $TRAVIS_BUILD_DIR && sh ./install-ubuntu.sh )"
 addons:
-  sonarqube:
+  sonarcloud:
     organization: "avrabe-github"
-    token:
-        secure: "UW8pyDaKN2+w/ZMdcgTTyMtBn8R8HRplvLvlOyI9DRFWlBlbKsgOoFOax66tMTZHEpKqX0x7LWsHygyKCXn0f7UUt26RuLEPsEt1kozhWJbtDRhuRJXe7nF/88AxnycgOkmIZNZrmpdnjE5nRcdpv0KKn2VUTfAIwfbgbKKsoXGnCIF9tuHdoslZvFlTVStL6xUxbSkwfuGWsmFR4jDB4yjwVIZuR9T5SOlCFbqj4MoyXcqufEdVc8GWdIT7oVEb+K6ob677Y4iAZrHT9GYyp/J7GygtZ8RKD9izLhXTm0yd2EttICrfyNxK4z8ON8O4/Zjn6Hl6OR17rqa4gezfxSexwbCYM8f8VH/3Hb+18aqAnWQxWbWAA3ttC6xtdkuyvMQ8h2dgN38r8nmDuKrfOhoTtZwsFHkHsDcVxKXvWMffwtH3VMQMH1csk9Nry2Gl/xBsGP/Ul2DlNIcfXmFqM3quZueosdrH+esf2pSLU7g/CWn9kJNLn1EGbKmxIvGc/bAPBqTW0eXUef7JM8zBCpSJwnQZGijA1Ey2iuJGn+e8H285twnd7bauVwaZXDQsxOM+7ZsKO72hJDbfgONe/hhyuNsz2Xyh2PEsLE8ES7WPv3aZrmjGUKpzGk1A1DD2xSVC/3fnZP77pCdqNE3H3IDx8xh5Ez/F5JV8Rjz7YJY="
+    token: $SONAR_TOKEN
 script:
   #- sudo ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
   #- sudo ln -s /usr/bin/g++-6 /usr/local/bin/g++
@@ -31,7 +30,7 @@ script:
   - mkdir -p build
   - cd build
   - cmake ..
-  - build-wrapper-linux-x86-64 --out-dir ../bw-output make clean all
+  - build-wrapper-linux-x86-64 --out-dir bw-output make clean all
   - sonar-scanner -Dproject.settings=$TRAVIS_BUILD_DIR/sonar-project.properties
 cache:
   directories:
