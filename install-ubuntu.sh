@@ -10,5 +10,5 @@ make
 sudo make install
 cd ..
 cd ..
-#sudo rm -r uWebSockets
+sudo rm -r uWebSockets
 #sudo ln -s /usr/lib64/libuWS.so /usr/lib/libuWS.so
