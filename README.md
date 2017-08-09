@@ -1,4 +1,7 @@
 # CarND-Path-Planning-Project
+[![Build Status](https://travis-ci.org/avrabe/CarND-Path-Planning-Project.svg?branch=master)](https://travis-ci.org/avrabe/CarND-Path-Planning-Project)
+[![Quality Gate](https://sonarqube.com/api/badges/gate?key=carnd-path-planning-project)](https://sonarqube.com/dashboard/index/carnd-path-planning-project)
+
 Self-Driving Car Engineer Nanodegree Program
    
 ### Simulator.
