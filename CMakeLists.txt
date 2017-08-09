@@ -20,6 +20,13 @@ link_directories(/usr/local/Cellar/libuv/1.11.0/lib)
 
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
+if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
+
+    set(CXX_FLAGS "-Wall  -O0 -fprofile-arcs -ftest-coverage ")
+    set(CMAKE_CXX_FLAGS, "${CXX_FLAGS}")
+
+endif(${CMAKE_BUILD_TYPE} MATCHES "Debug")
+
 
 add_executable(path_planning ${sources})
 

@@ -27,11 +27,19 @@ script:
   #- export CXX=/usr/bin/g++-6
   - gcc -v && g++ -v && cmake --version
   # Run your build commands next
+  - mkdir -p build_release
+  - cd build_release
+  - cmake .. -DCMAKE_BUILD_TYPE=Release
+  - make clean all
+  - cd $TRAVIS_BUILD_DIR
   - mkdir -p build
   - cd build
-  - cmake ..
+  - cmake .. -DCMAKE_BUILD_TYPE=Debug
   - build-wrapper-linux-x86-64 --out-dir bw-output make clean all
+  - ./path_planning & sleep 5 && killall -9 path_planning
+  -	LC_ALL=en gcov --branch-probabilities --branch-counts src/main.cpp -o .
   - sonar-scanner -Dproject.settings=$TRAVIS_BUILD_DIR/sonar-project.properties
+
 cache:
   directories:
     - '$HOME/.sonar/cache'  
