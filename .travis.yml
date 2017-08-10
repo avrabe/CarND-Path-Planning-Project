@@ -1,20 +1,19 @@
-sudo: required
-dist: trusty
-language:
-  - cpp
-compiler:
-  - gcc
-cache: ccache
+language: cpp
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      dist: trusty
+      compiler: gcc
+      cache:
+        ccache:
+        directories: '$HOME/.sonar/cache'
+    - os: osx
+      osx_image: xcode7.2
+      compiler: clang
 
 before_install:
-      - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
-      - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-      - sudo add-apt-repository ppa:george-edison55/cmake-3.x -y
-      - sudo apt-get -qq update
-      - sudo apt-get install -y curl cmake cmake-data build-essential libssl-dev gcc-6 g++-6 gfortran
-      - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-6
-      - sudo sh -c "(cd $TRAVIS_BUILD_DIR && git clone https://github.com/libuv/libuv.git && cd libuv && git checkout v1.12.0 && sh autogen.sh && ./configure && make -j 4 && make install && cd .. && rm -rf libuv)"
-      - sudo sh -c "(cd $TRAVIS_BUILD_DIR && sh ./install-ubuntu.sh )"
+      - ./.travis/install.sh
 addons:
   sonarcloud:
     organization: "avrabe-github"
@@ -36,6 +35,3 @@ script:
   - LC_ALL=en gcov --branch-probabilities --branch-counts ./build/CMakeFiles/path_planning.dir/src/main.cpp.gcno
   - sonar-scanner -Dproject.settings=$TRAVIS_BUILD_DIR/sonar-project.properties
 
-cache:
-  directories:
-    - '$HOME/.sonar/cache'  

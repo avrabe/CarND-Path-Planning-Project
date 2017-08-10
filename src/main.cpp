@@ -290,7 +290,6 @@ int main(int argc, char** argv) {
       LOG_S(INFO) << "Disconnected" << std::endl;
   });
 
-  return 0;
   int port = 4567;
   if (h.listen(port)) {
       LOG_S(INFO) << "Listening to port " << port << std::endl;
