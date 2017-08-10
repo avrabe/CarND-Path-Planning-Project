@@ -1,6 +1,8 @@
 #!/bin/bash
 
 if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+    brew install openssl libuv cmake zlib
+    sudo sh -c "(cd $TRAVIS_BUILD_DIR && git clone https://github.com/libuv/libuv.git && cd libuv && git checkout v1.12.0 && sh autogen.sh && ./configure && make -j 4 && make install && cd .. && rm -rf libuv)"
     sudo sh -c "(cd $TRAVIS_BUILD_DIR && sh ./install-mac.sh )"
 else
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
