@@ -184,7 +184,6 @@ int main(int argc, char** argv) {
   double max_s = 6945.554;
 
   ifstream in_map_(map_file_.c_str(), ifstream::in);
-  return 0;
   string line;
   while (getline(in_map_, line)) {
   	istringstream iss(line);
@@ -291,6 +290,7 @@ int main(int argc, char** argv) {
       LOG_S(INFO) << "Disconnected" << std::endl;
   });
 
+  return 0;
   int port = 4567;
   if (h.listen(port)) {
       LOG_S(INFO) << "Listening to port " << port << std::endl;
