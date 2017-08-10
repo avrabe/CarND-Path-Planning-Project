@@ -35,9 +35,10 @@ script:
   - mkdir -p build
   - cd build
   - cmake .. -DCMAKE_BUILD_TYPE=Debug
-  - build-wrapper-linux-x86-64 --out-dir bw-output make clean all
-  - ./path_planning & sleep 5 && killall -9 path_planning
-  -	LC_ALL=en gcov --branch-probabilities --branch-counts src/main.cpp -o .
+  - build-wrapper-linux-x86-64 --out-dir ../bw-output make clean all
+  - cd $TRAVIS_BUILD_DIR
+  - LD_LIBRARY_PATH=/usr/local/lib:/usr/lib64 ./build/path_planning & sleep 5 && killall -9 path_planning
+  - LC_ALL=en gcov --branch-probabilities --branch-counts src/main.cpp -o .
   - sonar-scanner -Dproject.settings=$TRAVIS_BUILD_DIR/sonar-project.properties
 
 cache:
