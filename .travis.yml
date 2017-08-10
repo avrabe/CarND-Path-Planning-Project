@@ -20,11 +20,6 @@ addons:
     organization: "avrabe-github"
     token: $SONAR_TOKEN
 script:
-  #- sudo ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
-  #- sudo ln -s /usr/bin/g++-6 /usr/local/bin/g++
-  # Export CC and CXX to tell cmake which compiler to use
-  #- export CC=/usr/bin/gcc-6
-  #- export CXX=/usr/bin/g++-6
   - gcc -v && g++ -v && cmake --version
   # Run your build commands next
   - mkdir -p build_release
@@ -38,7 +33,7 @@ script:
   - build-wrapper-linux-x86-64 --out-dir ../bw-output make clean all
   - cd $TRAVIS_BUILD_DIR
   - LD_LIBRARY_PATH=/usr/local/lib:/usr/lib64 ./build/path_planning & sleep 5 && killall -9 path_planning
-  - LC_ALL=en gcov --branch-probabilities --branch-counts src/main.cpp -o .
+  - LC_ALL=en gcov --branch-probabilities --branch-counts ./build/CMakeFiles/path_planning.dir/src/main.cpp.gcno
   - sonar-scanner -Dproject.settings=$TRAVIS_BUILD_DIR/sonar-project.properties
 
 cache:
