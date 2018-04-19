@@ -1,5 +1,5 @@
 #include <fstream>
-#include <math.h>
+#include <cmath>
 #include <uWS/uWS.h>
 #include <chrono>
 #include <iostream>
@@ -48,7 +48,7 @@ int ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vect
 	double closestLen = 100000; //large number
 	int closestWaypoint = 0;
 
-	for(int i = 0; i < maps_x.size(); i++)
+    for (unsigned int i = 0; i < maps_x.size(); i++)
 	{
 		double map_x = maps_x[i];
 		double map_y = maps_y[i];
@@ -68,7 +68,7 @@ int ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vect
 int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x, const vector<double> &maps_y)
 {
 
-	int closestWaypoint = ClosestWaypoint(x,y,maps_x,maps_y);
+    unsigned int closestWaypoint = ClosestWaypoint(x, y, maps_x, maps_y);
 
 	double map_x = maps_x[closestWaypoint];
 	double map_y = maps_y[closestWaypoint];
@@ -95,7 +95,7 @@ vector<double> getFrenet(double x, double y, double theta, const vector<double> 
 {
 	int next_wp = NextWaypoint(x,y, theta, maps_x,maps_y);
 
-	int prev_wp;
+    unsigned long prev_wp;
 	prev_wp = next_wp-1;
 	if(next_wp == 0)
 	{
@@ -128,7 +128,7 @@ vector<double> getFrenet(double x, double y, double theta, const vector<double> 
 
 	// calculate s value
 	double frenet_s = 0;
-	for(int i = 0; i < prev_wp; i++)
+    for (unsigned int i = 0; i < prev_wp; i++)
 	{
 		frenet_s += distance(maps_x[i],maps_y[i],maps_x[i+1],maps_y[i+1]);
 	}
@@ -149,7 +149,7 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 		prev_wp++;
 	}
 
-	int wp2 = (prev_wp+1)%maps_x.size();
+    unsigned long wp2 = (prev_wp + 1) % maps_x.size();
 
 	double heading = atan2((maps_y[wp2]-maps_y[prev_wp]),(maps_x[wp2]-maps_x[prev_wp]));
 	// the x,y,s along the segment
@@ -248,6 +248,12 @@ int main(int argc, char** argv) {
 
 
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
+            double dist_inc = 0.5;
+            for (int i = 0; i < 50; i++) {
+                next_x_vals.push_back(car_x + (dist_inc * i) * cos(deg2rad(car_yaw)));
+                next_y_vals.push_back(car_y + (dist_inc * i) * sin(deg2rad(car_yaw)));
+            }
+
           	msgJson["next_x"] = next_x_vals;
           	msgJson["next_y"] = next_y_vals;
 
@@ -290,7 +296,6 @@ int main(int argc, char** argv) {
       LOG_S(INFO) << "Disconnected" << std::endl;
   });
 
-    return 0;
   int port = 4567;
   if (h.listen(port)) {
       LOG_S(INFO) << "Listening to port " << port << std::endl;
