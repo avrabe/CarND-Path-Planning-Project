@@ -12,6 +12,7 @@
 #define LOGURU_IMPLEMENTATION 1
 #define LOGURU_WITH_STREAMS 1
 #include "external/loguru/loguru.hpp"
+#include "external/spline/spline.h"
 
 using namespace std;
 
@@ -249,9 +250,14 @@ int main(int argc, char** argv) {
 
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
             double dist_inc = 0.5;
-            for (int i = 0; i < 50; i++) {
-                next_x_vals.push_back(car_x + (dist_inc * i) * cos(deg2rad(car_yaw)));
-                next_y_vals.push_back(car_y + (dist_inc * i) * sin(deg2rad(car_yaw)));
+            for (int i = 0; i < 30; i++) {
+                LOG_S(INFO) << "car (s: " << car_s << " d: " << car_d << " yaw: " << car_yaw << " speed: " << car_speed;
+                double new_car_s = car_s + (dist_inc);
+                double new_car_d = 6;
+                vector<double> new_car;
+                new_car = getXY(new_car_s, new_car_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+                next_x_vals.push_back(new_car[0]);
+                next_y_vals.push_back(new_car[1]);
             }
 
           	msgJson["next_x"] = next_x_vals;
