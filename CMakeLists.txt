@@ -11,7 +11,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-set(sources src/main.cpp src/jmt.cpp)
+set(sources src/main.cpp src/jmt.cpp src/vehicle.cpp)
 
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")

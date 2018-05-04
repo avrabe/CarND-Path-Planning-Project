@@ -4,7 +4,6 @@
  */
 #include <vector>
 #include "Eigen-3.3/Eigen/LU"
-#include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 
 
@@ -15,7 +14,6 @@ using Eigen::VectorXd;
 
 #include "jmt.h"
 
-// TODO - complete this function
 vector<double> JMT(vector<double> start, vector<double> end, double T) {
     Matrix3d A = Matrix3d();
     A << T * T * T, T * T * T * T, T * T * T * T * T,

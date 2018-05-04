@@ -19,6 +19,23 @@ constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
 
+
+vector<double> differentiate_coeffs(vector<double> coeffs) {
+    vector<double> diff_coeffs;
+    for (int i = 1; i < coeffs.size(); i++) {
+        diff_coeffs.push_back(i * coeffs[i]);
+    }
+    return diff_coeffs;
+}
+
+double evaluate_coeffs_at_time(vector<double> coeffs, double time) {
+    double eval = 0;
+    for (int i = 0; i < coeffs.size(); i++) {
+        eval += coeffs[i] * pow(time, i);
+    }
+    return eval;
+}
+
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
 // else the empty string "" will be returned.
@@ -248,6 +265,7 @@ int main(int argc, char** argv) {
             double proposed_car_s = car_s + dist_inc * 30;
             double new_car_s = proposed_car_s;
             for (unsigned int i = 0; i < sensor_fusion.size(); i++) {
+                LOG_S(INFO) << sensor_fusion[i][0] << " s " << sensor_fusion[i][5] << " d " << sensor_fusion[i][6];
                 double sf_d = sensor_fusion[i][6];
                 double sf_s = sensor_fusion[i][5];
                 if (sf_d >= 4 && sf_d <= 8 && sf_s < proposed_car_s && sf_s > car_s) {

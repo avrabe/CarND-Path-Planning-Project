@@ -1,4 +1,6 @@
 #ifndef PATH_PLANNING_JMT_H
+
+#include <vector>
 #define PATH_PLANNING_JMT_H
 
 /*
