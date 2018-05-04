@@ -1,18 +1,13 @@
 #include <fstream>
 #include <cmath>
 #include <uWS/uWS.h>
-#include <chrono>
-#include <iostream>
 #include <thread>
-#include <vector>
 #include "Eigen-3.3/Eigen/Core"
-#include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
 
 #define LOGURU_IMPLEMENTATION 1
 #define LOGURU_WITH_STREAMS 1
 #include "external/loguru/loguru.hpp"
-#include "external/spline/spline.h"
 
 using namespace std;
 
@@ -96,7 +91,7 @@ vector<double> getFrenet(double x, double y, double theta, const vector<double> 
 {
 	int next_wp = NextWaypoint(x,y, theta, maps_x,maps_y);
 
-    unsigned long prev_wp;
+    int prev_wp;
 	prev_wp = next_wp-1;
 	if(next_wp == 0)
 	{
@@ -129,7 +124,7 @@ vector<double> getFrenet(double x, double y, double theta, const vector<double> 
 
 	// calculate s value
 	double frenet_s = 0;
-    for (unsigned int i = 0; i < prev_wp; i++)
+    for (int i = 0; i < prev_wp; i++)
 	{
 		frenet_s += distance(maps_x[i],maps_y[i],maps_x[i+1],maps_y[i+1]);
 	}
@@ -222,37 +217,52 @@ int main(int argc, char** argv) {
         string event = j[0].get<string>();
         
         if (event == "telemetry") {
-          // j[1] is the data JSON object
-          
-        	// Main car's localization Data
-          	double car_x = j[1]["x"];
-          	double car_y = j[1]["y"];
-          	double car_s = j[1]["s"];
-          	double car_d = j[1]["d"];
-          	double car_yaw = j[1]["yaw"];
-          	double car_speed = j[1]["speed"];
+            // j[1] is the data JSON object
 
-          	// Previous path data given to the Planner
-          	auto previous_path_x = j[1]["previous_path_x"];
-          	auto previous_path_y = j[1]["previous_path_y"];
-          	// Previous path's end s and d values 
-          	double end_path_s = j[1]["end_path_s"];
-          	double end_path_d = j[1]["end_path_d"];
+            // Main car's localization Data
+            double car_x = j[1]["x"];
+            double car_y = j[1]["y"];
+            double car_s = j[1]["s"];
+            double car_d = j[1]["d"];
+            double car_yaw = j[1]["yaw"];
+            double car_speed = j[1]["speed"];
 
-          	// Sensor Fusion Data, a list of all other cars on the same side of the road.
-          	auto sensor_fusion = j[1]["sensor_fusion"];
+            // Previous path data given to the Planner
+            auto previous_path_x = j[1]["previous_path_x"];
+            auto previous_path_y = j[1]["previous_path_y"];
+            // Previous path's end s and d values
+            double end_path_s = j[1]["end_path_s"];
+            double end_path_d = j[1]["end_path_d"];
 
-          	json msgJson;
+            // Sensor Fusion Data, a list of all other cars on the same side of the road.
+            auto sensor_fusion = j[1]["sensor_fusion"];
 
-          	vector<double> next_x_vals;
-          	vector<double> next_y_vals;
+            json msgJson;
+
+            vector<double> next_x_vals;
+            vector<double> next_y_vals;
 
 
-          	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
+            // TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
             double dist_inc = 0.5;
+            double proposed_car_s = car_s + dist_inc * 30;
+            double new_car_s = proposed_car_s;
+            for (unsigned int i = 0; i < sensor_fusion.size(); i++) {
+                double sf_d = sensor_fusion[i][6];
+                double sf_s = sensor_fusion[i][5];
+                if (sf_d >= 4 && sf_d <= 8 && sf_s < proposed_car_s && sf_s > car_s) {
+                    if (sf_s < new_car_s) {
+                        LOG_S(INFO) << "Car in front (s: " << sf_d << " d: " << sf_d;
+                        new_car_s = sf_s;
+                    }
+                }
+            }
+            dist_inc = fabs((new_car_s - car_s) / 30);
             for (int i = 0; i < 30; i++) {
-                LOG_S(INFO) << "car (s: " << car_s << " d: " << car_d << " yaw: " << car_yaw << " speed: " << car_speed;
-                double new_car_s = car_s + (dist_inc);
+                LOG_S(INFO)
+                << "dist_inc: " << dist_inc << ", car (s: " << car_s << " d: " << car_d << " yaw: " << car_yaw
+                << " speed: " << car_speed;
+                new_car_s = car_s + (dist_inc * i);
                 double new_car_d = 6;
                 vector<double> new_car;
                 new_car = getXY(new_car_s, new_car_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
