@@ -5,7 +5,6 @@
 #include "Eigen-3.3/Eigen/Core"
 #include "json/json.hpp"
 #include "my_vehicle.h"
-#include "other_vehicles.h"
 
 #define LOGURU_IMPLEMENTATION 1
 #define LOGURU_WITH_STREAMS 1
@@ -185,8 +184,8 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 int main(int argc, char** argv) {
   uWS::Hub h;
 
-  auto Vehicle = my_vehicle();
   auto Vehicles = other_vehicles();
+    auto Vehicle = my_vehicle(Vehicles);
 
   // Load up map values for waypoint's x,y,s and d normalized normal vectors
   vector<double> map_waypoints_x;
@@ -265,8 +264,9 @@ int main(int argc, char** argv) {
             vector<double> next_y_vals;
 
 
-            Vehicle.update(car_x, car_y, car_s, car_d, car_yaw, car_speed);
             Vehicles.update(sensor_fusion);
+            Vehicle.update(car_x, car_y, car_s, car_d, car_yaw, car_speed);
+            Vehicle.get_calculated_path();
 
             // TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
             double dist_inc = 0.5;
@@ -278,7 +278,7 @@ int main(int argc, char** argv) {
                 double sf_s = sensor_fusion[i][5];
                 if (sf_d >= 4 && sf_d <= 8 && sf_s < proposed_car_s && sf_s > car_s) {
                     if (sf_s < new_car_s) {
-                        LOG_S(INFO) << "Car in front (s: " << sf_d << " d: " << sf_d;
+                        LOG_S(INFO) << "Car in front s: " << sf_s << " d: " << sf_d;
                         new_car_s = sf_s;
                     }
                 }

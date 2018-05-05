@@ -9,9 +9,9 @@
 
 class other_vehicle: public vehicle {
 private:
-    double vx, vy;
     double previous_vx, previous_vy;
 public:
+    double vx, vy;
     explicit other_vehicle(unsigned int my_id);
 
     void update(double x, double y, double s, double d, double vx, double vy);

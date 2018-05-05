@@ -10,9 +10,8 @@
 
 
 class other_vehicles {
-private:
-    std::map<unsigned int, other_vehicle> otherVehicles;
 public:
+    std::map<unsigned int, other_vehicle> otherVehicles;
     other_vehicles();
     void update(const nlohmann::json& sensor_fusion);
 };
