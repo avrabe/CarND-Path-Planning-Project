@@ -9,13 +9,16 @@
 class vehicle {
 private:
     unsigned int id;
-    double x, y, vx, vy, s, d;
+    double x, y, s, d;
+    double previous_x, previous_y, previous_s, previous_d;
+
+protected:
+    void update(double x, double y, double s, double d);
+
 public:
     explicit vehicle(unsigned int my_id);
-
     vehicle();
 
-    void update(double x, double y, double vx, double vy, double s, double d);
 };
 
 

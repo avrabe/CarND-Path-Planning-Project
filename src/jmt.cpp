@@ -3,8 +3,8 @@
  * from the Udacity Trajectory Generation lesson.
  */
 #include <vector>
-#include "Eigen-3.3/Eigen/LU"
-#include "Eigen-3.3/Eigen/QR"
+#include "external/Eigen-3.3/Eigen/LU"
+#include "external/Eigen-3.3/Eigen/QR"
 
 
 using namespace std;

@@ -2,8 +2,8 @@
 #include <cmath>
 #include <uWS/uWS.h>
 #include <thread>
-#include "Eigen-3.3/Eigen/Core"
-#include "json.hpp"
+#include "external/Eigen-3.3/Eigen/Core"
+#include "external/json/json.hpp"
 
 #define LOGURU_IMPLEMENTATION 1
 #define LOGURU_WITH_STREAMS 1
