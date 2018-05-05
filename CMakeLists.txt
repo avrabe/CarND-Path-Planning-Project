@@ -3,6 +3,8 @@ project(Path_Planning)
 cmake_minimum_required (VERSION 3.2)
 
 add_definitions(-std=c++11 -Wall)
+include_directories(include)
+include_directories(external)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING
@@ -11,7 +13,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-set(sources src/main.cpp src/jmt.cpp src/vehicle.cpp src/other_vehicle.cpp src/my_vehicle.cpp )
+set(sources src/main.cpp src/jmt.cpp src/vehicle.cpp src/other_vehicle.cpp src/my_vehicle.cpp src/other_vehicles.cpp )
 
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")

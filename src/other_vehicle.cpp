@@ -10,8 +10,8 @@ other_vehicle::other_vehicle(unsigned int my_id) : vehicle(my_id), vx{-1}, vy{-1
 
 void other_vehicle::update(double x, double y, double s, double d, double vx, double vy) {
     vehicle::update(x, y, s, d);
-    this->previous_vx = vx;
-    this->previous_vy = vy;
+    this->previous_vx = this->vx;
+    this->previous_vy = this->vy;
     this->vx = vx;
     this->vy = vy;
 }

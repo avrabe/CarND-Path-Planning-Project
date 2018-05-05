@@ -2,12 +2,14 @@
 #include <cmath>
 #include <uWS/uWS.h>
 #include <thread>
-#include "external/Eigen-3.3/Eigen/Core"
-#include "external/json/json.hpp"
+#include "Eigen-3.3/Eigen/Core"
+#include "json/json.hpp"
+#include "my_vehicle.h"
+#include "other_vehicles.h"
 
 #define LOGURU_IMPLEMENTATION 1
 #define LOGURU_WITH_STREAMS 1
-#include "external/loguru/loguru.hpp"
+#include "loguru/loguru.hpp"
 
 using namespace std;
 
@@ -183,6 +185,9 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 int main(int argc, char** argv) {
   uWS::Hub h;
 
+  auto Vehicle = my_vehicle();
+  auto Vehicles = other_vehicles();
+
   // Load up map values for waypoint's x,y,s and d normalized normal vectors
   vector<double> map_waypoints_x;
   vector<double> map_waypoints_y;
@@ -190,7 +195,7 @@ int main(int argc, char** argv) {
   vector<double> map_waypoints_dx;
   vector<double> map_waypoints_dy;
 
-    loguru::init(argc, argv);
+  loguru::init(argc, argv);
   // Waypoint map to read from
   string map_file_ = "../data/highway_map.csv";
   // The max s value before wrapping around the track back to 0
@@ -217,7 +222,7 @@ int main(int argc, char** argv) {
   	map_waypoints_dy.push_back(d_y);
   }
 
-  h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy,&Vehicle, &Vehicles](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -260,12 +265,15 @@ int main(int argc, char** argv) {
             vector<double> next_y_vals;
 
 
+            Vehicle.update(car_x, car_y, car_s, car_d, car_yaw, car_speed);
+            Vehicles.update(sensor_fusion);
+
             // TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
             double dist_inc = 0.5;
             double proposed_car_s = car_s + dist_inc * 30;
             double new_car_s = proposed_car_s;
             for (unsigned int i = 0; i < sensor_fusion.size(); i++) {
-                LOG_S(INFO) << sensor_fusion[i][0] << " s " << sensor_fusion[i][5] << " d " << sensor_fusion[i][6];
+                //LOG_S(INFO) << sensor_fusion[i][0] << " s " << sensor_fusion[i][5] << " d " << sensor_fusion[i][6];
                 double sf_d = sensor_fusion[i][6];
                 double sf_s = sensor_fusion[i][5];
                 if (sf_d >= 4 && sf_d <= 8 && sf_s < proposed_car_s && sf_s > car_s) {
@@ -277,9 +285,9 @@ int main(int argc, char** argv) {
             }
             dist_inc = fabs((new_car_s - car_s) / 30);
             for (int i = 0; i < 30; i++) {
-                LOG_S(INFO)
-                << "dist_inc: " << dist_inc << ", car (s: " << car_s << " d: " << car_d << " yaw: " << car_yaw
-                << " speed: " << car_speed;
+                //LOG_S(INFO)
+                //<< "dist_inc: " << dist_inc << ", car (s: " << car_s << " d: " << car_d << " yaw: " << car_yaw
+                //<< " speed: " << car_speed;
                 new_car_s = car_s + (dist_inc * i);
                 double new_car_d = 6;
                 vector<double> new_car;
