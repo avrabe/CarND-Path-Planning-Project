@@ -8,20 +8,23 @@
 
 class vehicle {
 private:
-    double x, y, d;
     double previous_x, previous_y, previous_s, previous_d;
 
 protected:
     void update(double x, double y, double s, double d);
 
-    unsigned int getLane();
+    int lane2d(int lane);
+
 public:
     unsigned int id;
-    double s;
+    double x, y;
+    double s, d;
     explicit vehicle(unsigned int my_id);
     vehicle();
 
     bool isInSameLane(vehicle &other);
+
+    int getLane();
 
 };
 

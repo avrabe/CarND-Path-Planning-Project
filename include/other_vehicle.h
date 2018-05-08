@@ -16,6 +16,10 @@ public:
 
     void update(double x, double y, double s, double d, double vx, double vy);
 
+    double getSpeedMPH();
+
+    double getSpeedMPS();
+
 };
 
 

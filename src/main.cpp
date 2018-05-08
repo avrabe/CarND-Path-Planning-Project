@@ -15,15 +15,13 @@ using namespace std;
 // for convenience
 using json = nlohmann::json;
 
-// For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
-double deg2rad(double x) { return x * pi() / 180; }
-double rad2deg(double x) { return x * 180 / pi(); }
+
 
 
 vector<double> differentiate_coeffs(vector<double> coeffs) {
     vector<double> diff_coeffs;
-    for (int i = 1; i < coeffs.size(); i++) {
+    for (unsigned int i = 1; i < coeffs.size(); i++) {
         diff_coeffs.push_back(i * coeffs[i]);
     }
     return diff_coeffs;
@@ -31,7 +29,7 @@ vector<double> differentiate_coeffs(vector<double> coeffs) {
 
 double evaluate_coeffs_at_time(vector<double> coeffs, double time) {
     double eval = 0;
-    for (int i = 0; i < coeffs.size(); i++) {
+    for (unsigned int i = 0; i < coeffs.size(); i++) {
         eval += coeffs[i] * pow(time, i);
     }
     return eval;
@@ -153,33 +151,6 @@ vector<double> getFrenet(double x, double y, double theta, const vector<double> 
 
 }
 
-// Transform from Frenet s,d coordinates to Cartesian x,y
-vector<double> getXY(double s, double d, const vector<double> &maps_s, const vector<double> &maps_x, const vector<double> &maps_y)
-{
-	int prev_wp = -1;
-
-	while(s > maps_s[prev_wp+1] && (prev_wp < (int)(maps_s.size()-1) ))
-	{
-		prev_wp++;
-	}
-
-    unsigned long wp2 = (prev_wp + 1) % maps_x.size();
-
-	double heading = atan2((maps_y[wp2]-maps_y[prev_wp]),(maps_x[wp2]-maps_x[prev_wp]));
-	// the x,y,s along the segment
-	double seg_s = (s-maps_s[prev_wp]);
-
-	double seg_x = maps_x[prev_wp]+seg_s*cos(heading);
-	double seg_y = maps_y[prev_wp]+seg_s*sin(heading);
-
-	double perp_heading = heading-pi()/2;
-
-	double x = seg_x + d*cos(perp_heading);
-	double y = seg_y + d*sin(perp_heading);
-
-	return {x,y};
-
-}
 
 int main(int argc, char** argv) {
   uWS::Hub h;
@@ -266,9 +237,13 @@ int main(int argc, char** argv) {
 
             Vehicles.update(sensor_fusion);
             Vehicle.update(car_x, car_y, car_s, car_d, car_yaw, car_speed);
-            Vehicle.get_calculated_path();
+            Vehicle.get_calculated_path(previous_path_x, previous_path_y,
+                                        end_path_s, end_path_d,
+                                        map_waypoints_s, map_waypoints_x, map_waypoints_y,
+                                        next_x_vals, next_y_vals);
 
             // TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
+            /*
             double dist_inc = 0.5;
             double proposed_car_s = car_s + dist_inc * 30;
             double new_car_s = proposed_car_s;
@@ -295,6 +270,13 @@ int main(int argc, char** argv) {
                 next_x_vals.push_back(new_car[0]);
                 next_y_vals.push_back(new_car[1]);
             }
+            for (int i = 0; i < next_s_vals.size(); i++) {
+                vector<double> new_car;
+                new_car = getXY(next_s_vals[i], next_d_vals[i], map_waypoints_s, map_waypoints_x, map_waypoints_y);
+                next_x_vals.push_back(new_car[0]);
+                next_y_vals.push_back(new_car[1]);
+            }
+            */
 
           	msgJson["next_x"] = next_x_vals;
           	msgJson["next_y"] = next_y_vals;
