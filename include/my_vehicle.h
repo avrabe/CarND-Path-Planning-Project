@@ -37,9 +37,16 @@ public:
 
     bool isInSameLaneAndDirectlyInFrontOfMe(const int prev_size);
 
-    bool isInSameLaneAndDirectlyInFrontOfMe(const int prev_size, const unsigned int lane);
+    bool isInLaneAndDirectlyInFrontOfMe(const int prev_size, const unsigned int lane);
 
+    bool isInOtherLaneAndBesidesOfMe(const unsigned int lane);
+
+    bool isInOtherLaneAndDirectlyInBackOfMe(const int prev_size, const unsigned int lane);
     bool isLaneFree(const unsigned int lane);
+
+    other_vehicle *getClosetCarInFrontOfMe(unsigned int lane);
+
+    double getTargetSpeed(const int prev_size);
 };
 
 

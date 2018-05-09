@@ -80,8 +80,8 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
 
     updateState(end_path_s, prev_size, car_in_front_too_close);
 
-    if (car_in_front_too_close) {
-        LOG_S(INFO) << "too close";
+    if (car_in_front_too_close && ref_vel > getTargetSpeed(prev_size)) {
+        //LOG_S(INFO) << "too close";
         ref_vel -= 0.112;
     }
 
@@ -151,9 +151,10 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
 
     double x_add_on = 0;
     for (int i = prev_size; i < 50; i++) {
-        if (!car_in_front_too_close && ref_vel < TARGET_SPEED_MPS) {
+        if (!car_in_front_too_close && ref_vel < getTargetSpeed(prev_size)) {
             ref_vel += 0.112;
         }
+
 
         double N = target_dist / (0.02 * ref_vel);
         double x_point = x_add_on + target_x / N;
@@ -184,40 +185,52 @@ void my_vehicle::updateState(const double end_path_s, const int prev_size,
             if (fabs(d - lane2d(target_lane)) < 0.3) {
                 state = STATE_IN_LANE;
             }
-            car_in_front_too_close = isInSameLaneAndDirectlyInFrontOfMe(prev_size);
+            car_in_front_too_close = isInLaneAndDirectlyInFrontOfMe(prev_size, target_lane);
             break;
         case STATE_IN_LANE:
             // initialize all lane costs to 0
-            car_in_front_too_close = isInSameLaneAndDirectlyInFrontOfMe(prev_size);
             std::vector<int> lane_cost(NUM_LANES, 0);
 
 
             switch (getLane()) { // Don't switch two lanes at a time
                 case 0:
-                    lane_cost[2] = 1000;
+                    lane_cost[2] = 10000;
                     break;
                 case 2:
-                    lane_cost[0] = 1000;
+                    lane_cost[0] = 10000;
                     break;
             }
 
+            for (unsigned int i = 0; i < lane_cost.size(); i++) {
+                if (isInOtherLaneAndBesidesOfMe(i)) {
+                    int own_lane = (i == getLane()) ? -2000 : 0;
+                    other_vehicle *other = getClosetCarInFrontOfMe(i);
+                    lane_cost[i] += 6000 + own_lane - fabs(other->s - s) * 10;
+                }
+            }
+            for (unsigned int i = 0; i < lane_cost.size(); i++) {
+                if (isInOtherLaneAndDirectlyInBackOfMe(prev_size, i)) {
+                    int own_lane = (i == getLane()) ? -3000 : 0;
+                    lane_cost[i] += 5000 + own_lane;
+                }
+            }
+
+            for (unsigned int i = 0; i < lane_cost.size(); i++) {
+                if (isInLaneAndDirectlyInFrontOfMe(prev_size, i) == true) {
+                    lane_cost[i] += 2000;
+                }
+            }
             // Prefer lanes with no car
             for (unsigned int i = 0; i < lane_cost.size(); i++) {
-                if (isLaneFree(prev_size) == false) {
+                if (isLaneFree(i) == false) {
                     lane_cost[i] += 500;
                 }
             }
 
-            std::vector<int> cars_in_front_of_lane_too_close(NUM_LANES, false);
-            for (unsigned int i = 0; i < lane_cost.size(); i++) {
-                if (isInSameLaneAndDirectlyInFrontOfMe(prev_size, i) == true) {
-                    lane_cost[i] += 250;
-                }
-            }
 
             // Prefer the preferred lane
             for (unsigned int i = 0; i < lane_cost.size(); i++) {
-                if (getLane() != PREFERED_LANE) {
+                if (i != PREFERED_LANE) {
                     lane_cost[i] += 10;
                 }
             }
@@ -227,58 +240,22 @@ void my_vehicle::updateState(const double end_path_s, const int prev_size,
                 state = STATE_CHANGE_LANE;
                 target_lane = minimal_lane;
                 car_in_front_too_close = false;
-                LOG_S(INFO) << "Switching to lane " << minimal_lane;
+                LOG_S(INFO)
+                << "Switching to lane " << minimal_lane << " offer was " << lane_cost[0] << ", " << lane_cost[1] << ", "
+                << lane_cost[2];
+            } else {
+                car_in_front_too_close = isInSameLaneAndDirectlyInFrontOfMe(prev_size);
             }
-            /*
-            for (auto &x : otherVehicles.otherVehicles) {
-                other_vehicle other = x.second;
-                double other_car_future_s = other.s + prev_size * 0.02 * other.getSpeedMPS();
 
-                if (other.getLane() == getLane()) {
-                    if ((other_car_future_s > s) &&
-                        (other_car_future_s - s < 30)) {
-                    lane_cost[other.getLane()] += 1;
-                    car_in_front_too_close = true;
-                    cars_in_front_of_lane_too_close[getLane()] = true;
-                    } // else lane seems free
-                } else {
-                    if (fabs(other.s - s) < 30) { // car is on another lane and blocking us
-                        lane_cost[other.getLane()] += 1;
-                        cars_in_front_of_lane_too_close[other.getLane()] = true;
-                    } else if  (other.s < s && other.s + 60 > s &&
-                                other.getSpeedMPS() > ref_vel) { // car is in another lane and about to overtake us
-                        cars_in_front_of_lane_too_close[other.getLane()] = false;
-                        lane_cost[other.getLane()] += 1000;
-                    }
-                }
-
-                state = STATE_CHANGE_LANE;
-
-                if (getLane() >= 1 && lane_cost[getLane() - 1] < lane_cost[getLane()]) {
-                    target_lane = getLane() - 1;
-                }
-                else if (getLane() < NUM_LANES - 1 && lane_cost[getLane() + 1] < lane_cost[getLane()]) {
-                    target_lane = getLane() + 1;
-                }
-                else if (getLane() != PREFERED_LANE && lane_cost[PREFERED_LANE] == 0) {
-                    target_lane = PREFERED_LANE;
-                } else {
-                    state = STATE_IN_LANE;
-                };
-                if (state == STATE_CHANGE_LANE) {
-                    LOG_S(INFO) << "changing lane to " << target_lane;
-                    //car_in_front_too_close = car_in_lane_too_close[getLane()];
-                }
-             */
             break;
     }
 }
 
 bool my_vehicle::isInSameLaneAndDirectlyInFrontOfMe(const int prev_size) {
-    return isInSameLaneAndDirectlyInFrontOfMe(prev_size, getLane());
+    return isInLaneAndDirectlyInFrontOfMe(prev_size, getLane());
 }
 
-bool my_vehicle::isInSameLaneAndDirectlyInFrontOfMe(const int prev_size, const unsigned int lane) {
+bool my_vehicle::isInLaneAndDirectlyInFrontOfMe(const int prev_size, const unsigned int lane) {
     double other_car_future_s = 0;
     bool ret = false;
 
@@ -290,6 +267,45 @@ bool my_vehicle::isInSameLaneAndDirectlyInFrontOfMe(const int prev_size, const u
         if (other.getLane() == lane) {
             //LOG_S(INFO) << other.id << " is on the same lane as me " << getLane();
             if ((other_car_future_s > s) && (other_car_future_s - s < 30)) {
+                ret = true;
+                //LOG_S(INFO) << closest_vehicle_in_front->id << " is closest in front of me with s " << closest_car_future_s << " mine " << s;
+            }
+        }
+
+    }
+    return ret;
+}
+
+bool my_vehicle::isInOtherLaneAndDirectlyInBackOfMe(const int prev_size, const unsigned int lane) {
+    bool ret = false;
+
+    for (auto &x : this->otherVehicles.otherVehicles) {
+        other_vehicle other = x.second;
+
+        if (other.getLane() == lane) {
+            //LOG_S(INFO) << other.id << " is on the same lane as me " << getLane();
+            if ((other.s < s && other.s + 120 > s && other.getSpeedMPS() > ref_vel)) {
+                ret = true;
+                LOG_S(INFO)
+                << other.id << " is close in back of me " << other.s << " with " << other.getSpeedMPH() << " mine "
+                << s;
+            }
+        }
+
+    }
+    return ret;
+}
+
+
+bool my_vehicle::isInOtherLaneAndBesidesOfMe(const unsigned int lane) {
+    bool ret = false;
+
+    for (auto &x : this->otherVehicles.otherVehicles) {
+        other_vehicle other = x.second;
+
+        if (other.getLane() == lane) {
+            //LOG_S(INFO) << other.id << " is on the same lane as me " << getLane();
+            if (fabs(other.s - s) < 40) {
                 ret = true;
                 //LOG_S(INFO) << closest_vehicle_in_front->id << " is closest in front of me with s " << closest_car_future_s << " mine " << s;
             }
@@ -313,3 +329,50 @@ bool my_vehicle::isLaneFree(const unsigned int lane) {
     return ret;
 }
 
+other_vehicle *my_vehicle::getClosetCarInFrontOfMe(unsigned int lane) {
+    other_vehicle *closest_vehicle_in_front = nullptr;
+    for (auto &x : this->otherVehicles.otherVehicles) {
+        if (x.second.getLane() == lane) {
+            //LOG_S(INFO) << x.second.id << " is on the same lane as me " << getLane();
+            if (this->s > x.second.s) {
+                //LOG_S(INFO) << x.second.id << " is in back of me ";
+            } else if (closest_vehicle_in_front == nullptr) {
+                //LOG_S(INFO) << x.second.id << " is in front of me ";
+                closest_vehicle_in_front = static_cast<other_vehicle *>(&x.second);
+            } else if (closest_vehicle_in_front->s > x.second.s) {
+                //LOG_S(INFO) << x.second.id << " is closer in front of me than " << closest_vehicle_in_front->id;
+                closest_vehicle_in_front = static_cast<other_vehicle *>(&x.second);
+            }
+        }
+
+    }
+    //if (closest_vehicle_in_front != nullptr) {
+    //    LOG_S(INFO)
+    //    << closest_vehicle_in_front->id << " is closest in front of me with vx " << closest_vehicle_in_front->vx
+    //    << " and vy " << closest_vehicle_in_front->vy;
+    //}
+    return closest_vehicle_in_front;
+}
+
+double my_vehicle::getTargetSpeed(const int prev_size) {
+    other_vehicle *other = nullptr;
+    bool in_front_of_us = false;
+    double target_speed_mps = TARGET_SPEED_MPS;
+    switch (state) {
+        case STATE_CHANGE_LANE:
+            in_front_of_us = isInLaneAndDirectlyInFrontOfMe(prev_size, target_lane);
+            other = getClosetCarInFrontOfMe(target_lane);
+            break;
+        case STATE_IN_LANE:
+            in_front_of_us = isInLaneAndDirectlyInFrontOfMe(prev_size, getLane());
+            other = getClosetCarInFrontOfMe(getLane());
+            break;
+    }
+
+    if (in_front_of_us) {
+        target_speed_mps = fmin(other->getSpeedMPS(), TARGET_SPEED_MPS);
+        LOG_S(INFO) << "Adjust to speed of front car " << other->getSpeedMPS() << " :: " << target_speed_mps;
+    }
+
+    return target_speed_mps;
+}
