@@ -4,6 +4,60 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/98e7477b90a148c6b23e595a81fb2424)](https://www.codacy.com/app/avrabe/CarND-Path-Planning-Project?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=avrabe/CarND-Path-Planning-Project&amp;utm_campaign=Badge_Grade)
 
 Self-Driving Car Engineer Nanodegree Program
+## Reflection
+
+The path planning is split into two parts:
+- Update the state of the car if necessary
+- Plan the path according to the results of the updated state
+The planning is covered in src/my_vehicle.cpp
+
+### my_vehicle::updateState
+The vehicle in the simulation has two states:
+- stay in lane
+- change lane
+
+When changing the lane, the assumed speed to change is close to the speed limit.
+If during the change a slow car in the new lane will appear, the speed is adjusted.
+The lane change is considered successful, and the state will switch into the stay in lane state,
+if the car drives in the middle of the new lane.
+
+When the car stays in the lane, it is evaluated if it would be better to change lanes.
+For this the costs for each lane are calculated. This includes following considerations:
+1. Does changing to a lane also means to cross another lane?
+2. Are there other cars directly besides my car in a lane?
+3. Are there other cars in front of my car in a lane. And if how close they are?
+4. Are there no detected cars in a lane?
+5. Is the lane a preferred lane?
+
+For 2. and 3. the costs on the current lane are less than the other lanes.
+With 3. and 5. it also enables to switch to a possibly faster lane.
+
+If the current lane has the minimal costs, the car stays in the lane and adjusts
+the speed if a car is in front.
+
+Otherwise a change of lane is initiated and the car does not assume a blocking car in the front of the new lane.
+
+### my_vehicle::get_calculated_path
+
+To plan the next waypoints, the results from the update state function is taken into consideration.
+A new path is prepared using the previous path (if available) as input. Otherwise the current position
+and a possible previous position is used as starting point.
+
+If a change of lane is considered, the next waypoints are determined to change the lanes.
+Otherwise the next waypoints are determined to keep in the middle of the current lane.
+
+These points are input for creating a spline.
+
+The next waypoints then are created by using the existing previous waypoints.
+Afterwards the results from the spline are added. The car will speed up or slow down based on a static
+velocity increase or decrease. The target speed is either close to the speed limit or the speed of the car in front.
+ 
+## Video
+An example video of the path planning algorithm running together with the simulator can be seen on youtube:
+
+[![Video](https://img.youtube.com/vi/shhSvbe6pxw/hqdefault.jpg)](https://youtu.be/shhSvbe6pxw)
+
+## Information
    
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).
