@@ -1,7 +1,26 @@
-//
-// Created by Ralf on 5/5/2018.
-//
+/*
+MIT License
 
+Copyright (c) 2018 Ralf Anton Beier
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+ */
 #include <vector>
 #include <cmath>
 #include "spline/spline.h"
@@ -12,9 +31,9 @@
 
 #include "loguru/loguru.hpp"
 
-#define PREFERED_LANE 1
+#define PREFERRED_LANE 1
 #define TARGET_SPEED_MPS 49.5 / 2.236936
-#define NUM_LANES 3
+#define NUMBER_OF_LANES 3
 
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
@@ -61,30 +80,27 @@ void my_vehicle::update(double x, double y, double s, double d, double yaw, doub
     this->previous_speed = this->speed;
     this->yaw = yaw;
     this->speed = speed;
-    //LOG_S(INFO) << "Mine: speed " << speed << " mp/h, " << speed *1.609344 / 3.6 << " m/s, yaw " << yaw;
 }
 
 void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, const nlohmann::json &previous_path_y,
-                                     const double end_path_s, const double end_path_d,
-                                     const std::vector<double> &map_waypoints_s,
+                                     const double end_path_s, const std::vector<double> &map_waypoints_s,
                                      const std::vector<double> &map_waypoints_x,
-                                     const std::vector<double> &map_waypoints_y,
-                                     std::vector<double> &next_x_vals, std::vector<double> &next_y_vals) {
+                                     const std::vector<double> &map_waypoints_y, std::vector<double> &next_x_vals,
+                                     std::vector<double> &next_y_vals) {
 
-    int prev_size = previous_path_x.size();
+    unsigned int prev_size = previous_path_x.size();
     if (prev_size > 0) {
         s = end_path_s;
     }
 
     bool car_in_front_too_close = false;
 
-    updateState(end_path_s, prev_size, car_in_front_too_close);
+    updateState(prev_size, car_in_front_too_close);
 
     double speed = getTargetSpeed(prev_size);
 
-
-    std::vector<double> ptsx;
-    std::vector<double> ptsy;
+    std::vector<double> points_x;
+    std::vector<double> points_y;
 
     double ref_x = this->x;
     double ref_y = this->y;
@@ -94,11 +110,11 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
         double prev_car_x = this->x - cos(this->yaw);
         double prev_car_y = this->y - sin(this->yaw);
 
-        ptsx.push_back(prev_car_x);
-        ptsx.push_back(this->x);
+        points_x.push_back(prev_car_x);
+        points_x.push_back(this->x);
 
-        ptsy.push_back(prev_car_y);
-        ptsy.push_back(this->y);
+        points_y.push_back(prev_car_y);
+        points_y.push_back(this->y);
     } else {
         ref_x = previous_path_x[prev_size - 1];
         ref_y = previous_path_y[prev_size - 1];
@@ -107,49 +123,50 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
         double ref_y_prev = previous_path_y[prev_size - 2];
         ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
 
-        ptsx.push_back(ref_x_prev);
-        ptsx.push_back(ref_x);
+        points_x.push_back(ref_x_prev);
+        points_x.push_back(ref_x);
 
-        ptsy.push_back(ref_y_prev);
-        ptsy.push_back(ref_y);
+        points_y.push_back(ref_y_prev);
+        points_y.push_back(ref_y);
     }
 
     double target_d = lane2d(target_lane);
+    unsigned int point = 0;
     std::vector<double> next_wp;
     std::vector<unsigned int> steps;
 
     switch (state) {
         case STATE_CHANGE_LANE:
             // first step will change the lane.
-            steps = {30, 60, 90};
+            steps = {40, 60, 90};
             break;
         case STATE_IN_LANE:
             // Try to stay in lane
-            steps = {10, 15, 20, 25, 30, 60, 90};
+            steps = {12, 15, 20, 25, 30, 60, 90};
             break;
     }
 
     for (auto &x : steps) {
         next_wp = getXY(this->s + x, target_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-        ptsx.push_back(next_wp[0]);
-        ptsy.push_back(next_wp[1]);
+        points_x.push_back(next_wp[0]);
+        points_y.push_back(next_wp[1]);
     }
 
-    for (unsigned int i = 0; i < ptsx.size(); i++) {
-        double shift_x = ptsx[i] - ref_x;
-        double shift_y = ptsy[i] - ref_y;
+    for (point = 0; point < points_x.size(); point++) {
+        double shift_x = points_x[point] - ref_x;
+        double shift_y = points_y[point] - ref_y;
 
-        ptsx[i] = (shift_x * cos(-ref_yaw) - shift_y * sin(-ref_yaw));
-        ptsy[i] = (shift_x * sin(-ref_yaw) + shift_y * cos(-ref_yaw));
+        points_x[point] = (shift_x * cos(-ref_yaw) - shift_y * sin(-ref_yaw));
+        points_y[point] = (shift_x * sin(-ref_yaw) + shift_y * cos(-ref_yaw));
     }
 
     tk::spline spline;
-    spline.set_points(ptsx, ptsy);
+    spline.set_points(points_x, points_y);
 
     // The remains of the previous path will be the next next path
-    for (int i = 0; i < prev_size; i++) {
-        next_x_vals.push_back(previous_path_x[i]);
-        next_y_vals.push_back(previous_path_y[i]);
+    for (point = 0; point < prev_size; point++) {
+        next_x_vals.push_back(previous_path_x[point]);
+        next_y_vals.push_back(previous_path_y[point]);
     }
 
     double target_x = 15;
@@ -157,7 +174,7 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
     double target_dist = sqrt(target_x * target_x + target_y * target_y);
 
     double x_add_on = 0;
-    for (int i = prev_size; i < 15; i++) {
+    for (point = prev_size; point < 15; point++) {
         if (!car_in_front_too_close && ref_vel < speed) {
             ref_vel += 0.112;
         }
@@ -170,7 +187,6 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
                 ref_vel -= 0.112;
             }
         }
-        //LOG_S(INFO) << i << " speed " <<  speed  << " ref " << ref_vel;
         double N = target_dist / (0.02 * ref_vel);
         double x_point = x_add_on + target_x / N;
         double y_point = spline(x_point);
@@ -191,20 +207,19 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
     }
 }
 
-void my_vehicle::updateState(const double end_path_s, const int prev_size,
-                             bool &car_in_front_too_close) {
+void my_vehicle::updateState(const int prev_size, bool &car_in_front_too_close) {
     car_in_front_too_close = false;
 
     switch (state) {
         case STATE_CHANGE_LANE:
-            if (fabs(d - lane2d(target_lane)) < 0.3) {
+            if (fabs(d - lane2d(target_lane)) < 0.2) {
                 state = STATE_IN_LANE;
             }
             car_in_front_too_close = isInLaneAndDirectlyInFrontOfMe(prev_size, target_lane);
             break;
         case STATE_IN_LANE:
             // initialize all lane costs to 0
-            std::vector<int> lane_cost(NUM_LANES, 0);
+            std::vector<int> lane_cost(NUMBER_OF_LANES, 0);
 
 
             switch (getLane()) { // Don't switch two lanes at a time
@@ -219,13 +234,11 @@ void my_vehicle::updateState(const double end_path_s, const int prev_size,
             for (unsigned int i = 0; i < lane_cost.size(); i++) {
                 if (isInOtherLaneAndBesidesOfMe(i)) {
                     int own_lane = (i == getLane()) ? -5500 : 0;
-                    //other_vehicle *other = getClosetCarInFrontOfMe(i);
-                    //lane_cost[i] += 6000 + own_lane - fabs(other->s - s) * 10;
                     lane_cost[i] += 6000 + own_lane;
                 }
             }
             for (unsigned int i = 0; i < lane_cost.size(); i++) {
-                if (isInOtherLaneAndDirectlyInBackOfMe(prev_size, i)) {
+                if (isInOtherLaneAndDirectlyInBackOfMe(i)) {
                     int own_lane = (i == getLane()) ? -3000 : 0;
                     lane_cost[i] += 5000 + own_lane;
                 }
@@ -234,9 +247,9 @@ void my_vehicle::updateState(const double end_path_s, const int prev_size,
             for (unsigned int i = 0; i < lane_cost.size(); i++) {
                 if (isInLaneAndDirectlyInFrontOfMe(prev_size, i) == true) {
                     int own_lane = (i == getLane()) ? -2000 : 0;
-                    other_vehicle *other = getClosetCarInFrontOfMe(i);
+                    other_vehicle *other = getClosestCarInFrontOfMe(i);
                     if (other != nullptr) {
-                        lane_cost[i] += 3000 + own_lane - fabs(other->s - s) * 10;
+                        lane_cost[i] += abs(3000 + own_lane - fabs(other->s - s) * 10);
                     } else {
                         lane_cost[i] += 3000 + own_lane;
                     }
@@ -249,15 +262,15 @@ void my_vehicle::updateState(const double end_path_s, const int prev_size,
                 }
             }
 
-
             // Prefer the preferred lane
             for (unsigned int i = 0; i < lane_cost.size(); i++) {
-                if (i != PREFERED_LANE) {
+                if (i != PREFERRED_LANE) {
                     lane_cost[i] += 10;
                 }
             }
 
-            int minimal_lane = std::distance(lane_cost.begin(), std::min_element(lane_cost.begin(), lane_cost.end()));
+            unsigned int minimal_lane = std::distance(lane_cost.begin(),
+                                                      std::min_element(lane_cost.begin(), lane_cost.end()));
             if (minimal_lane != getLane()) {
                 state = STATE_CHANGE_LANE;
                 target_lane = minimal_lane;
@@ -287,33 +300,29 @@ bool my_vehicle::isInLaneAndDirectlyInFrontOfMe(const int prev_size, const unsig
         other_car_future_s = other.s + prev_size * 0.02 * other.getSpeedMPS();
 
         if (other.getLane() == lane) {
-            //LOG_S(INFO) << other.id << " is on the same lane as me " << getLane();
             if ((other_car_future_s > s) && (other_car_future_s - s < 30)) {
                 ret = true;
                 //LOG_S(INFO) << closest_vehicle_in_front->id << " is closest in front of me with s " << closest_car_future_s << " mine " << s;
             }
         }
-
     }
     return ret;
 }
 
-bool my_vehicle::isInOtherLaneAndDirectlyInBackOfMe(const int prev_size, const unsigned int lane) {
+bool my_vehicle::isInOtherLaneAndDirectlyInBackOfMe(const unsigned int lane) {
     bool ret = false;
 
     for (auto &x : this->otherVehicles.otherVehicles) {
         other_vehicle other = x.second;
 
         if (other.getLane() == lane) {
-            //LOG_S(INFO) << other.id << " is on the same lane as me " << getLane();
             if ((other.s < s && other.s + 120 > s && other.getSpeedMPS() > ref_vel)) {
                 ret = true;
-                LOG_S(INFO)
-                << other.id << " is close in back of me " << other.s << " with " << other.getSpeedMPH() << " mine "
-                << s;
+                //LOG_S(INFO)
+                //<< other.id << " is close in back of me " << other.s << " with " << other.getSpeedMPH() << " mine "
+                //g<< s;
             }
         }
-
     }
     return ret;
 }
@@ -326,7 +335,6 @@ bool my_vehicle::isInOtherLaneAndBesidesOfMe(const unsigned int lane) {
         other_vehicle other = x.second;
 
         if (other.getLane() == lane) {
-            //LOG_S(INFO) << other.id << " is on the same lane as me " << getLane();
             if (fabs(other.s - s) < 40) {
                 ret = true;
                 //LOG_S(INFO) << closest_vehicle_in_front->id << " is closest in front of me with s " << closest_car_future_s << " mine " << s;
@@ -351,31 +359,23 @@ bool my_vehicle::isLaneFree(const unsigned int lane) {
     return ret;
 }
 
-other_vehicle *my_vehicle::getClosetCarInFrontOfMe(unsigned int lane) {
+other_vehicle *my_vehicle::getClosestCarInFrontOfMe(unsigned int lane) {
     other_vehicle *closest_vehicle_in_front = nullptr;
     for (auto &x : this->otherVehicles.otherVehicles) {
-        if (x.second.getLane() == lane) {
-            //LOG_S(INFO) << x.second.id << " is on the same lane as me " << getLane();
-            if (this->s > x.second.s) {
-                //LOG_S(INFO) << x.second.id << " is in back of me ";
-            } else if (closest_vehicle_in_front == nullptr || closest_vehicle_in_front->s > x.second.s) {
-                //LOG_S(INFO) << x.second.id << " is closer in front of me than " << closest_vehicle_in_front->id;
-                closest_vehicle_in_front = &x.second;
+        other_vehicle *other = &x.second;
+        if (other->getLane() == lane) {
+            if (this->s > other->s) {
+            } else if (closest_vehicle_in_front == nullptr || closest_vehicle_in_front->s > other->s) {
+                closest_vehicle_in_front = other;
             }
         }
 
     }
-    //if (closest_vehicle_in_front != nullptr) {
-    //    LOG_S(INFO)
-    //    << closest_vehicle_in_front->id << " is closest in front of me with vx " << closest_vehicle_in_front->vx
-    //    << " and vy " << closest_vehicle_in_front->vy;
-    //}
     return closest_vehicle_in_front;
 }
 
 double my_vehicle::getTargetSpeed(const int prev_size) {
     other_vehicle *other = nullptr;
-    bool in_front_of_us = false;
     double target_speed_mps = TARGET_SPEED_MPS;
     unsigned int lane = 0;
     switch (state) {
@@ -386,14 +386,13 @@ double my_vehicle::getTargetSpeed(const int prev_size) {
             lane = getLane();
             break;
     }
-    in_front_of_us = isInLaneAndDirectlyInFrontOfMe(prev_size, lane);
-    other = getClosetCarInFrontOfMe(lane);
 
+    bool in_front_of_us = isInLaneAndDirectlyInFrontOfMe(prev_size, lane);
+    other = getClosestCarInFrontOfMe(lane);
 
     if (in_front_of_us) {
         target_speed_mps = fmin(other->getSpeedMPH(), TARGET_SPEED_MPS);
         //LOG_S(INFO) << "Adjust to speed of front car " << other->getSpeedMPS() << " ,, " << other->getSpeedMPH() << " :: " << other->getLane() << " " <<  lane;
     }
-
     return target_speed_mps;
 }

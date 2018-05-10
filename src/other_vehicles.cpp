@@ -1,9 +1,28 @@
-//
-// Created by Ralf on 5/5/2018.
-//
+/*
+MIT License
+
+Copyright (c) 2018 Ralf Anton Beier
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+ */
 #include <vector>
 #include "other_vehicles.h"
-#include "other_vehicle.h"
 
 
 #define LOGURU_WITH_STREAMS 1
@@ -25,7 +44,7 @@ void other_vehicles::update(const nlohmann::json &sensor_fusion) {
         auto pos = this->otherVehicles.find( id );
 
         if( pos == this->otherVehicles.end() ){
-            LOG_S(INFO) << "New approaching car: " << id;
+            //LOG_S(INFO) << "New approaching car: " << id;
             this->otherVehicles.insert(std::make_pair<unsigned int&, other_vehicle>(id, other_vehicle(id)));
             pos = this->otherVehicles.find( id );
         }
@@ -36,7 +55,7 @@ void other_vehicles::update(const nlohmann::json &sensor_fusion) {
     {
         if (std::find(found_cars.begin(), found_cars.end(), it->first) == found_cars.end())
         {
-            LOG_S(INFO) << "Car not seen anymore: " << it->first;
+            //LOG_S(INFO) << "Car not seen anymore: " << it->first;
             this->otherVehicles.erase(it++);    // or "it = m.erase(it)" since C++11
         }
         else
