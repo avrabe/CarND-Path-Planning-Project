@@ -27,5 +27,5 @@ else
   cd $TRAVIS_BUILD_DIR
   #LD_LIBRARY_PATH=/usr/local/lib:/usr/lib64 ./build/path_planning
   #LC_ALL=en gcov --branch-probabilities --branch-counts ./build/CMakeFiles/path_planning.dir/src/main.cpp.gcno
-  #sonar-scanner -Dproject.settings=$TRAVIS_BUILD_DIR/sonar-project.properties
+  sonar-scanner -Dproject.settings=$TRAVIS_BUILD_DIR/sonar-project.properties
 fi
