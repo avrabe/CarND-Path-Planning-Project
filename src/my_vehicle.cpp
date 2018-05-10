@@ -81,15 +81,7 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
     updateState(end_path_s, prev_size, car_in_front_too_close);
 
     double speed = getTargetSpeed(prev_size);
-    if (car_in_front_too_close && ref_vel > speed) {
-        LOG_S(INFO) << "too close";
-        if (speed >= ref_vel - 0.112) {
-            ref_vel = speed;
-        } else {
-            //ref_vel -= 0.112;
-            ref_vel -= 0.056;
-        }
-    }
+
 
     std::vector<double> ptsx;
     std::vector<double> ptsy;
@@ -123,18 +115,25 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
     }
 
     double target_d = lane2d(target_lane);
-    std::vector<double> next_wp = getXY(this->s + 30, target_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    ptsx.push_back(next_wp[0]);
-    ptsy.push_back(next_wp[1]);
+    std::vector<double> next_wp;
+    std::vector<unsigned int> steps;
 
-    next_wp = getXY(this->s + 60, target_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    ptsx.push_back(next_wp[0]);
-    ptsy.push_back(next_wp[1]);
+    switch (state) {
+        case STATE_CHANGE_LANE:
+            // first step will change the lane.
+            steps = {30, 60, 90};
+            break;
+        case STATE_IN_LANE:
+            // Try to stay in lane
+            steps = {10, 15, 20, 25, 30, 60, 90};
+            break;
+    }
 
-    next_wp = getXY(this->s + 90, target_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-    ptsx.push_back(next_wp[0]);
-    ptsy.push_back(next_wp[1]);
-
+    for (auto &x : steps) {
+        next_wp = getXY(this->s + x, target_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+        ptsx.push_back(next_wp[0]);
+        ptsy.push_back(next_wp[1]);
+    }
 
     for (unsigned int i = 0; i < ptsx.size(); i++) {
         double shift_x = ptsx[i] - ref_x;
@@ -147,22 +146,31 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
     tk::spline spline;
     spline.set_points(ptsx, ptsy);
 
+    // The remains of the previous path will be the next next path
     for (int i = 0; i < prev_size; i++) {
         next_x_vals.push_back(previous_path_x[i]);
         next_y_vals.push_back(previous_path_y[i]);
     }
 
-    double target_x = 30;
+    double target_x = 15;
     double target_y = spline(target_x);
     double target_dist = sqrt(target_x * target_x + target_y * target_y);
 
     double x_add_on = 0;
-    for (int i = prev_size; i < 30; i++) {
-        if (!car_in_front_too_close && ref_vel < getTargetSpeed(prev_size)) {
+    for (int i = prev_size; i < 15; i++) {
+        if (!car_in_front_too_close && ref_vel < speed) {
             ref_vel += 0.112;
         }
 
-
+        if (car_in_front_too_close && ref_vel > speed) {
+            if (speed >= ref_vel - 0.112) {
+                ref_vel = speed;
+            } else {
+                //ref_vel -= 0.112;
+                ref_vel -= 0.112;
+            }
+        }
+        //LOG_S(INFO) << i << " speed " <<  speed  << " ref " << ref_vel;
         double N = target_dist / (0.02 * ref_vel);
         double x_point = x_add_on + target_x / N;
         double y_point = spline(x_point);
@@ -383,8 +391,8 @@ double my_vehicle::getTargetSpeed(const int prev_size) {
 
 
     if (in_front_of_us) {
-        target_speed_mps = fmin(other->getSpeedMPS(), TARGET_SPEED_MPS);
-        //LOG_S(INFO) << "Adjust to speed of front car " << other->getSpeedMPS() << " :: " << other->getLane() << " " <<  lane;
+        target_speed_mps = fmin(other->getSpeedMPH(), TARGET_SPEED_MPS);
+        //LOG_S(INFO) << "Adjust to speed of front car " << other->getSpeedMPS() << " ,, " << other->getSpeedMPH() << " :: " << other->getLane() << " " <<  lane;
     }
 
     return target_speed_mps;
