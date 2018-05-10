@@ -1,7 +1,6 @@
 # CarND-Path-Planning-Project
 [![Build Status](https://travis-ci.org/avrabe/CarND-Path-Planning-Project.svg?branch=master)](https://travis-ci.org/avrabe/CarND-Path-Planning-Project)
-[![Quality Gate](https://sonarqube.com/api/badges/gate?key=carnd-path-planning-project)](https://sonarqube.com/dashboard/index/carnd-path-planning-project)
-[![codecov](https://codecov.io/gh/avrabe/CarND-Path-Planning-Project/branch/master/graph/badge.svg)](https://codecov.io/gh/avrabe/CarND-Path-Planning-Project)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=carnd-path-planning-project&metric=alert_status)](https://sonarcloud.io/dashboard?id=carnd-path-planning-project)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/98e7477b90a148c6b23e595a81fb2424)](https://www.codacy.com/app/avrabe/CarND-Path-Planning-Project?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=avrabe/CarND-Path-Planning-Project&amp;utm_campaign=Badge_Grade)
 
 Self-Driving Car Engineer Nanodegree Program
