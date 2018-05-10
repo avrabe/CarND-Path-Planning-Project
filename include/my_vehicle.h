@@ -43,7 +43,6 @@ private:
     STATE state;
     double ref_vel;
     int target_lane;
-    int counter;
 
     void updateState(const int prev_size, bool &car_in_front_too_close);
 
@@ -58,7 +57,7 @@ private:
     double getTargetSpeed(const int prev_size);
 
 public:
-    my_vehicle(other_vehicles &otherVehicles);
+    explicit my_vehicle(other_vehicles &otherVehicles);
 
     void update(double x, double y, double s, double d, double yaw, double speed);
 
