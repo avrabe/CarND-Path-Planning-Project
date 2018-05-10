@@ -36,8 +36,10 @@ typedef enum {
 class my_vehicle : public vehicle {
 private:
     other_vehicles &otherVehicles;
-    double yaw, speed;
-    double previous_yaw, previous_speed;
+    double yaw;
+    double speed;
+    double previous_yaw;
+    double previous_speed;
     STATE state;
     double ref_vel;
     int target_lane;

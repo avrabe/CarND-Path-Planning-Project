@@ -44,7 +44,6 @@ void vehicle::update(double x, double y, double s, double d) {
     this->y = y;
     this->s = s;
     this->d = d;
-    return;
 }
 
 unsigned int vehicle::getLane() {

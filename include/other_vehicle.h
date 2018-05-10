@@ -28,8 +28,10 @@ SOFTWARE.
 
 class other_vehicle: public vehicle {
 private:
-    double previous_vx, previous_vy;
-    double vx, vy;
+    double previous_vx;
+    double previous_vy;
+    double vx;
+    double vy;
 public:
     explicit other_vehicle(unsigned int my_id);
 

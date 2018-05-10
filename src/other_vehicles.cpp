@@ -32,7 +32,12 @@ void other_vehicles::update(const nlohmann::json &sensor_fusion) {
     std::vector<unsigned int> found_cars;
     for (unsigned int i = 0; i < sensor_fusion.size(); i++) {
         unsigned int id = sensor_fusion[i][0];
-        double x, y, s, d, vx, vy;
+        double x;
+        double y;
+        double s;
+        double d;
+        double vx;
+        double vy;
         x = sensor_fusion[i][1];
         y = sensor_fusion[i][2];
         vx = sensor_fusion[i][3];
@@ -44,7 +49,6 @@ void other_vehicles::update(const nlohmann::json &sensor_fusion) {
         auto pos = this->otherVehicles.find( id );
 
         if( pos == this->otherVehicles.end() ){
-            //LOG_S(INFO) << "New approaching car: " << id;
             this->otherVehicles.insert(std::make_pair<unsigned int&, other_vehicle>(id, other_vehicle(id)));
             pos = this->otherVehicles.find( id );
         }
@@ -55,8 +59,8 @@ void other_vehicles::update(const nlohmann::json &sensor_fusion) {
     {
         if (std::find(found_cars.begin(), found_cars.end(), it->first) == found_cars.end())
         {
-            //LOG_S(INFO) << "Car not seen anymore: " << it->first;
-            this->otherVehicles.erase(it++);    // or "it = m.erase(it)" since C++11
+            this->otherVehicles.erase(it);    // or "it = m.erase(it)" since C++11
+            it++;
         }
         else
         {

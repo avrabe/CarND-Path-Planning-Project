@@ -89,7 +89,7 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
                                      std::vector<double> &next_y_vals) {
 
     unsigned int prev_size = previous_path_x.size();
-    if (prev_size > 0) {
+    if (prev_size > 1) {
         s = end_path_s;
     }
 
@@ -169,12 +169,12 @@ void my_vehicle::get_calculated_path(const nlohmann::json &previous_path_x, cons
         next_y_vals.push_back(previous_path_y[point]);
     }
 
-    double target_x = 15;
+    double target_x = 20;
     double target_y = spline(target_x);
     double target_dist = sqrt(target_x * target_x + target_y * target_y);
 
     double x_add_on = 0;
-    for (point = prev_size; point < 15; point++) {
+    for (point = prev_size; point < 20; point++) {
         if (!car_in_front_too_close && ref_vel < speed) {
             ref_vel += 0.112;
         }
@@ -291,10 +291,10 @@ bool my_vehicle::isInSameLaneAndDirectlyInFrontOfMe(const int prev_size) {
 }
 
 bool my_vehicle::isInLaneAndDirectlyInFrontOfMe(const int prev_size, const unsigned int lane) {
-    double other_car_future_s = 0;
     bool ret = false;
 
     for (auto &x : this->otherVehicles.otherVehicles) {
+        double other_car_future_s = 0;
         other_vehicle other = x.second;
 
         other_car_future_s = other.s + prev_size * 0.02 * other.getSpeedMPS();
